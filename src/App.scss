@@ -25,7 +25,26 @@ $background-color: rgb(255, 255, 0);
   font-size: large;
 }
 
+.app-background {
+	background: url(app-bg.jpeg) no-repeat center center fixed;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	height: 100vh;
+}
+
+.app-dragger{
+	margin: 10%;
+	margin-top: 5%;
+}
+
+.app-content{
+	background-color: rgba(255, 255, 255, 0.5)
+}
+
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
