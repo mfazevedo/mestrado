@@ -1,26 +1,30 @@
-import React        from 'react'
+import React        				from 'react'
+import { bindActionCreators }   	from 'redux'
+import { connect }              	from 'react-redux'
+import {
+	loadRequestsFromBenchmark,
+	loadDefinitionsFromBenchmark,
+} 									from '../store/benchmark'
+
+import {
+	closestsNeighbor,
+}									from '../store/solution'
+
 
 import {
 		Upload,
         Icon,
-        message,
-	   }            from 'antd';
-
-import{
-	   Request,
-	   Client,
-} 					from '../model'
+		message,
+		Button,
+	   }            				from 'antd';
 
 const Dragger = Upload.Dragger;
 
-
-
-export class FileUpload extends React.Component {
+class FileUpload extends React.Component {
 
 	state = {
 		file: null,
 		fileArray: [],
-		requests: []
 	}
 
 	constructor(props){
@@ -59,14 +63,13 @@ export class FileUpload extends React.Component {
 	createRequests(){
 		let requestList = []
 		let tempFileList = this.state.fileArray
-		let count = 0
 		let startLine = 9
 		let capacity = parseFloat(tempFileList[4].substring(13, 16))
 		let vehiclesQuantity = parseInt(tempFileList[4].substring(2, 4))
 		
 		for (var i = startLine; i < tempFileList.length -1 ; i++) {
-			let id = (parseInt(tempFileList[i].substring(2, 5)) + 1).toString()
-			let obj = {
+			let id = (parseInt(tempFileList[i].substring(2, 5))).toString()
+			let tempRequest = {
 				id             : id, 
 				coordinateX    : parseFloat(tempFileList[i].substring(10, 13)),
 				coordinateY    : parseFloat(tempFileList[i].substring(22, 24)),
@@ -75,11 +78,17 @@ export class FileUpload extends React.Component {
 				windowClose    : parseFloat(tempFileList[i].substring(54, 57)),
 				serviceTime    : parseFloat(tempFileList[i].substring(66, 68)), 
 				dinamism       : parseFloat(0),
-				client         : new Client(id, 'Cliente ' + id),
 			}
-			requestList.push(new Request(obj))			
+			requestList.push(tempRequest)			
 		}   
-		this.setState({requests:requestList})    
+		this.props.loadRequestsFromBenchmark(requestList)
+		let tempDefinitions = {
+			capacity: capacity,
+			vehiclesQuantity: vehiclesQuantity,
+			depot: requestList[0],
+		}
+		this.props.loadDefinitionsFromBenchmark(tempDefinitions)
+		//this.setState({requests:requestList})    
 	}
 	  
 	errorHandler(evt) {
@@ -92,7 +101,6 @@ export class FileUpload extends React.Component {
 		var lines = this.state.file.split('\n');
 		this.setState({fileArray: lines})
 		this.createRequests()
-		console.log('This.state', this.state)
 	}  
 
 	render(){
@@ -111,7 +119,34 @@ export class FileUpload extends React.Component {
 				<p className="ant-upload-text">Clique ou Arraste o arquivo para Upload</p>
 				<p className="ant-upload-hint">Selecione o arquivo contendo o Benchmark para análise</p>
 			</Dragger>
+			<Button
+				onClick={()=> this.props.closestsNeighbor(this.props.Definitions.depot, this.props.Requests.slice(1), this.props.Definitions.capacity)}
+			>
+				Vizinho Mais proximo
+			</Button>
 			</div>
 		)
 	}
 }
+
+function mapStateToProps(state){
+	return{
+	  Benchmark: 	state.Benchmark,
+	  Definitions: 	state.Definitions,
+	  Requests:     state.Requests,
+	}
+  }
+  
+  function matchDispatchToProps(dispatch){
+	return bindActionCreators(
+		{ 
+			dispatch: dispatch,
+			loadRequestsFromBenchmark: loadRequestsFromBenchmark,
+			loadDefinitionsFromBenchmark: loadDefinitionsFromBenchmark,
+			closestsNeighbor: closestsNeighbor,
+		},
+	  	dispatch
+	)
+  }
+  
+  export default connect (mapStateToProps, matchDispatchToProps)(FileUpload);
