@@ -25,12 +25,34 @@
   background-size: cover;
   height: 100vh; }
 
+.Routes {
+  font-size: 50; }
+
 .app-dragger {
   margin: 10%;
-  margin-top: 5%; }
+  margin-top: 5%;
+  margin-bottom: 3%; }
+
+.ant-timeline {
+  font-size: 60;
+  color: #000000; }
+
+.RowFont {
+  font-size: 60;
+  color: #000000; }
+
+.ant-carousel .slick-slide {
+  text-align: center;
+  height: 160px;
+  line-height: 160px;
+  background: #ff0000;
+  overflow: hidden; }
+
+.ant-carousel .slick-slide h3 {
+  color: black; }
 
 .app-content {
-  background-color: rgba(255, 255, 255, 0.5); }
+  background-color: white; }
 
 @keyframes App-logo-spin {
   from {

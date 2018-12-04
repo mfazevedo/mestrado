@@ -1,14 +1,84 @@
 //------------------------------------------------------------------------------------
+//Definição API Google MAPS
+//------------------------------------------------------------------------------------  
+/*global google*/
+const google = window.google
+
+const googleMapsClient = require('@google/maps').createClient({
+	key: 'AIzaSyALR63q-PBK46xUm5kNNPTniu9BUC8Ih2U',
+	Promise: Promise
+});
+
+
+googleMapsClient.geocode({
+	address: '1600 Amphitheatre Parkway, Mountain View, CA'
+}).asPromise()
+.then((response) => {
+	console.log('>>> R1:', response.json.results);
+})
+.catch((err) => {
+	console.log('>>> E1:', err);
+})
+
+var origin1 = new google.maps.LatLng(55.930385, -3.118425);
+var destinationA = 'Stockholm, Sweden';
+
+
+var service = new google.maps.DistanceMatrixService();
+service.getDistanceMatrix(
+	{
+		origins: [origin1],
+		destinations: [destinationA],
+		travelMode: 'DRIVING',
+	}, 
+	(response, status)=>{
+		console.log('R3:',response,'status3',status)
+	}
+);
+
+
+//------------------------------------------------------------------------------------
 //findClosest(requestA /*Atencimento A*/, requestB /*Atencimento B*/)
 //>>> Retorna a distância entre o Chamado A e o Chamado B
 //------------------------------------------------------------------------------------
 function findDistance(requestA, requestB){
+
 	let xA = requestA.coordinateX
     let yA = requestA.coordinateY
     let xB = requestB.coordinateX
 	let yB = requestB.coordinateY
+
+	
+
+  
+
 	
 	//console.log('xA: ',xA,'xB: ',xB,'yA: ',yA,'yB: ',yB,)
+
+/* 	var origin1 = new google.maps.LatLng(55.930385, -3.118425);
+var origin2 = 'Greenwich, England';
+var destinationA = 'Stockholm, Sweden';
+var destinationB = new google.maps.LatLng(50.087692, 14.421150);
+
+var service = new google.maps.DistanceMatrixService();
+service.getDistanceMatrix(
+  {
+    origins: [origin1, origin2],
+    destinations: [destinationA, destinationB],
+    travelMode: 'DRIVING',
+    transitOptions: TransitOptions,
+    drivingOptions: DrivingOptions,
+    unitSystem: UnitSystem,
+    avoidHighways: Boolean,
+    avoidTolls: Boolean,
+  }, callback);
+
+function callback(response, status) {
+  // See Parsing the Results for
+  // the basics of a callback function.
+}
+ */
+
 	return Math.sqrt(Math.pow((xB - xA), 2) + Math.pow((yB - yA), 2)) //Encontra a distância geométrica (Fórmula)
 }
 
@@ -24,11 +94,9 @@ function findClosest(request, requestList){
 		distance: findDistance(request, tempRequest), //Calcula a distância entre os pontos
 	}
 
-	//console.log('FindClosest >>>', tempClosest)
-	
-	tempRequestList.splice(0, 1)         					//Remove o item selecionado como tempClosest inicial da lista
+	tempRequestList.splice((requestList[0].id == "0") ? 1 : 0, 1)         					//Remove o item selecionado como tempClosest inicial da lista
 
-	for (var x = 1; x < tempRequestList.length; x++){
+	for (var x = 0; x < tempRequestList.length; x++){
 		let tempDistance = findDistance(request, tempRequestList[x])
 		if (tempDistance < tempClosest.distance){
 			tempClosest = Object.assign({}, {
@@ -63,11 +131,16 @@ function mountSolution(route){
 //>>> Adiciona o depósito como ponto final da rota do veículo assim como seu custo de locomoção até o mesmo
 //------------------------------------------------------------------------------------
 function closeVehicleRoute(vehicle, depot){
+	
+	let distance = findDistance(vehicle.listedRequests.slice(-1)[0], depot)
 	let vehicleUpdates = {
-		listedRequests: vehicle.listedRequests.push(depot),
-		routeCost: findDistance(vehicle, depot) + vehicle.routeCost,
+		listedRequests: vehicle.listedRequests,
+		routeCost: distance + vehicle.routeCost,
 	}
-	vehicle = Object.assign({}, vehicle, vehicleUpdates) //Atualiza a carga atual do veículo
+
+	vehicleUpdates.listedRequests.push(depot)
+	console.log('VehiclieUPD>>>',vehicleUpdates)
+	return vehicleUpdates //Atualiza a carga atual do veículo
 }	
 
 //------------------------------------------------------------------------------------
@@ -109,10 +182,10 @@ export function closestsNeighbor(depot, requestList, capacity) {
 				//console.log('Vehicle >>> ', vehicleUpdates)
 				vehicle = Object.assign({}, vehicle, vehicleUpdates) //Atualiza a carga atual do veículo
 				
-				console.log('A excluir rota interna:', closestRequest, 'Rota interna: ', tempSolution.availableRequests)
+				//console.log('A excluir rota interna:', closestRequest, 'Rota interna: ', tempSolution.availableRequests)
 				let indexA = tempSolution.availableRequests.map(function(request) { return request.id }).indexOf(closestRequest.request.id)
 				tempSolution.availableRequests.splice(indexA, 1) //Se foi atendido por um veículo remove da lista geral
-				console.log('A excluir rota interna:', closestRequest, 'Rota interna após: ', tempSolution.availableRequests)
+				//console.log('A excluir rota interna:', closestRequest, 'Rota interna após: ', tempSolution.availableRequests)
 			}
 
 			//console.log('feasibleRequests BEFORE>>', feasibleRequests)
@@ -120,7 +193,7 @@ export function closestsNeighbor(depot, requestList, capacity) {
 			feasibleRequests.splice(indexB, 1) //Remove o item selecionado como mais proximo da lista de atendimentos possíveis, seja porque adicinou o mesmo ou não comportou
 			//console.log('feasibleRequests AFTER>>', feasibleRequests)
 		}
-		closeVehicleRoute(vehicle, depot)
+		vehicle = Object.assign({}, vehicle, closeVehicleRoute(vehicle, depot))
 		tempSolution.route.push(vehicle)		
 	}
 	

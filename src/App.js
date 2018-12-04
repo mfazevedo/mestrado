@@ -10,6 +10,7 @@ import {
 
 import {
 		FileUpload,
+		Routes,
 	   }         			from './view'
 
 
@@ -20,10 +21,11 @@ const { Content } = Layout;
 class App extends Component {
   render() {
     return (
-		<Layout className='app-background'>
+		<Layout>
 			<Provider store={Store}>
 				<Content className='app-content'>
 					<FileUpload/>
+					<Routes/>
 				</Content>
 			</Provider>
 		</Layout>
